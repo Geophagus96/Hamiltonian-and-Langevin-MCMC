@@ -8,7 +8,6 @@ import scipy.stats as st
 from math import sqrt
 from scipy.integrate import quad 
 
-
 #----------------------------------------------------------------------
 ##  BLOCK OF FUNCTIONS USED IN THE MAIN CODE
 #----------------------------------------------------------------------
