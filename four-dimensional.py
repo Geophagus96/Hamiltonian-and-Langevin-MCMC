@@ -457,3 +457,48 @@ def four_dim_noprod(config, beta, alpha):
     config[(a+1)%N,b] = x3new
     config[(a+1)%N,(b+1)%N] = x4new
     return config
+
+
+#Four-dimensional with block neighbourhood with discrete MALA
+def dmala(config, beta):
+    a = np.random.randint(0,N)
+    b = np.random.randint(0,N)
+    a1, b1 = a, ((b+1)%N)
+    a2, b2 = ((a+1)%N), b
+    a3, b3 = ((a+1)%N), ((b+1)%N)
+    u1 = rand()  
+    k1 = int(4*u1)
+    if (k1==0):
+        config[a,b]*=(-1)
+    elif (k1==1):
+        config[a1,b1]*=(-1) 
+    elif (k1==2): 
+        config[a2,b2]*=(-1) 
+    else: 
+        config[a3,b3]*=(-1) 
+    S1 = config[a,b]
+    nb1 = config[(a+1)%N, b] + config[a,(b+1)%N] + config[(a-1)%N, b] + config[a,(b-1)%N]
+    S2 = config[a1,b1]
+    nb2 = config[(a1+1)%N, b1] + config[a1,(b1+1)%N] + config[(a1-1)%N, b1] + config[a1,(b1-1)%N]
+    S3 = config[a2,b2]
+    nb3 = config[(a2+1)%N, b2] + config[a2,(b2+1)%N] + config[(a2-1)%N, b2] + config[a2,(b2-1)%N]
+    S4 = config[a3,b3]
+    nb4 = config[(a3+1)%N, b3] + config[a3,(b3+1)%N] + config[(a3-1)%N, b3] + config[a3,(b3-1)%N]
+    E = np.array([beta*S1*nb1, beta*S2*nb2, beta*S3*nb3, beta*S4*nb4])
+    subtotal = np.exp(E)/np.exp(-E)
+    total = np.sum(subtotal)  
+    u = rand()   
+    proportion = 0   
+    k2 = -1   
+    while proportion <= u:  
+        k2 += 1 
+        proportion += subtotal[k2]/total 
+    if (k2==0): 
+        config[a,b] *= (-1)
+    elif (k2==1): 
+        config[a1,b1] *= (-1)
+    elif (k2==2):
+        config[a2,b2] *= (-1)
+    else:
+        config[a3,b4] *= (-1)
+    return config
