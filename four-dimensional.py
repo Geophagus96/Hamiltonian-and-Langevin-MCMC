@@ -7,7 +7,6 @@ from scipy import trapz
 import scipy.stats as st
 from math import sqrt
 from scipy.integrate import quad 
-runfile('theoretical_val.py')
 
 
 #----------------------------------------------------------------------
