@@ -10,6 +10,11 @@ def initialstate(N):
     state = 2*np.random.randint(2, size=(N,N))-1
     return state
 
+def aux_initialize(N, p1):
+    sign = 2*np.random.randint(2, size=(N,N))-1
+    state = np.random.binomial(size=N*N,n=1,p=p1).reshape((N,N))
+    return sign*state
+
 #Energy calculation for a given configuration
 def calcEnergy(config):
     energy = 0
