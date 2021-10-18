@@ -1,5 +1,11 @@
 runfile('theoretical_val.py')
-runfile('four-dimensional.py')
+
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Oct 16 14:31:41 2021
+
+@author: Yuze Zhou
+"""
 
 #Grid_setup
 N = 20         #  size of the lattice, N x N
@@ -11,7 +17,7 @@ n1, n2  = 1.0/(mcSteps*N*N), 1.0/(mcSteps*mcSteps*N*N)
 
 
 #Repeated Test for four-dimensional with block neighbourhood over-relaxation
-alpha = 0.8
+alpha = 0.6
 energies_or_thirteen = np.zeros([100,nt])
 heats_or_thirteen = np.zeros([100,nt])
 elpases_or_thirteen = np.zeros(100)
@@ -25,18 +31,22 @@ for j in range(100):
       E1 = M1 = E2 = M2 = 0
       config = initialstate(N)
       iT=1.0/T[tt]; iT2=iT*iT;
-    
+      Ene = calcEnergy(config)
+      Mag = calcMag(config)
       for i in range(eqSteps):         # equilibrate
-         thirteen_noprod_cond(config, iT, alpha)        # Monte Carlo moves
-
+         config, Ene, Mag = thirteen_noprod_cond(config, iT, alpha, Ene, Mag )        # Monte Carlo moves
+      Ene = calcEnergy(config)
+      Mag = calcMag(config)
+      E1 = E1 + Ene
+      M1 = M1 + Mag
+      M2 = M2 + Mag*Mag 
+      E2 = E2 + Ene*Ene
       for i in range(mcSteps):
-         thirteen_noprod_cond(config, iT, alpha)          
-         Ene = calcEnergy(config)     # calculate the energy
-         Mag = calcMag(config)        # calculate the magnetisation
+         config ,Ene, Mag = thirteen_noprod_cond(config, iT, alpha, Ene, Mag)          
          E1 = E1 + Ene
          M1 = M1 + Mag
-         M2 = M2 + Mag*Mag 
-         E2 = E2 + Ene*Ene
+         M2 = M2 + Mag**2
+         E2 = E2 + Ene**2
 
       E[tt] = n1*E1
       M[tt] = n1*M1
@@ -46,9 +56,17 @@ for j in range(100):
     heats_or[j,] = C
     elpases_or[j] = time.time()-t0
 
+np.sum(np.power((np.mean(energies_or, axis=0)-E_theo),2))
+np.sum(np.var(energies_or, axis=0))
+np.sum(np.mean(np.power(energies_or-E_theo,2),axis=0))
+
+np.sum(np.power((np.mean(heats_or, axis=0)-C_theo),2));
+np.sum(np.var(heats_or, axis=0))
+np.sum(np.mean(np.power(heats_or-C_theo,2),axis=0))
+
 #Repeated test for four-dimensional with block neighbourhood and momentum grid over_relaxation
-p1 = 0.3
-alpha = 0.8
+p1 = 0.8
+alpha = 0.4
 energies_mom_13 = np.zeros([100,nt])
 heats_mom_13 = np.zeros([100,nt])
 elpases_mom_13 = np.zeros(100)
@@ -63,18 +81,21 @@ for j in range(100):
       config = initialstate(N)
       u = aux_initialize(N,p1)
       iT=1.0/T[tt]; iT2=iT*iT;
-    
+      Ene = calcEnergy(config)
+      Mag = calcMag(config)
       for i in range(eqSteps):         # equilibrate
-         thirteen_mom_cond(config, u, iT, alpha, p1)        # Monte Carlo moves
-
+         config, u, Ene, Mag = thirteen_mom_cond(config, u, iT, alpha, p1, Ene, Mag)        # Monte Carlo moves
+      Ene = calcEnergy(config)
+      Mag = calcMag(config)
+      E1 = E1 + Ene
+      M1 = M1 + float(Mag)
+      M2 = M2 + float(Mag*Mag) 
+      E2 = E2 + Ene*Ene
       for i in range(mcSteps):
-         thirteen_mom_cond(config, u, iT, alpha, p1)          
-         Ene = calcEnergy(config)     # calculate the energy
-         Mag = calcMag(config)        # calculate the magnetisation
-         Energies_dmala[tt,i] = Ene
+         config, u, Ene, Mag = thirteen_mom_cond(config, u, iT, alpha, p1, Ene, Mag)          
          E1 = E1 + Ene
-         M1 = M1 + Mag
-         M2 = M2 + Mag*Mag 
+         M1 = M1 + float(Mag)
+         M2 = M2 + float(Mag*Mag) 
          E2 = E2 + Ene*Ene
 
       E[tt] = n1*E1
@@ -84,6 +105,14 @@ for j in range(100):
     energies_mom_13[j,] = E
     heats_mom_13[j,] = C
     elpases_mom_13[j] = time.time()-t0
+
+np.sum(np.power((np.mean(energies_mom, axis=0)-E_theo),2))
+np.sum(np.var(energies_mom, axis=0))
+np.sum(np.mean(np.power(energies_mom-E_theo,2),axis=0))
+
+np.sum(np.power((np.mean(heats_mom, axis=0)-C_theo),2))
+np.sum(np.var(heats_mom, axis=0))
+np.sum(np.mean(np.power(heats_mom-C_theo,2),axis=0))
 
 #Repeated test for four-dimensional with block neighbourhood discrete-MALA
 energies_Gibbs = np.zeros([100,nt])
@@ -101,10 +130,10 @@ for j in range(100):
       iT=1.0/T[tt]; iT2=iT*iT;
     
       for i in range(eqSteps):         # equilibrate
-         dmala(config, iT)        # Monte Carlo moves
+         thirteen_Gibbs(config, iT)        # Monte Carlo moves
 
       for i in range(mcSteps):
-         dmala(config, iT)          
+         thirteen_Gibbs(config, iT)          
          Ene = calcEnergy(config)     # calculate the energy
          Mag = calcMag(config)        # calculate the magnetisation
          E1 = E1 + Ene
@@ -119,3 +148,16 @@ for j in range(100):
     energies_Gibbs[j,] = E
     heats_Gibbs[j,] = C
     elpases_Gibbs[j] = time.time()-t0
+
+np.sum(np.power((np.mean(energies_Gibbs, axis=0)-E_theo),2))
+np.sum(np.var(energies_Gibbs, axis=0))
+np.sum(np.mean(np.power(energies_Gibbs-E_theo,2),axis=0))
+
+np.sum(np.power((np.mean(heats_Gibbs, axis=0)-C_theo),2))
+np.sum(np.var(heats_Gibbs, axis=0))
+np.sum(np.mean(np.power(heats_Gibbs-C_theo,2),axis=0))
+
+plt.plot(T, np.var(energies_or, axis=0), label='over-relaxation');plt.plot(T, np.var(energies_mom, axis=0), label='momentum');plt.plot(T, np.var(energies_Gibbs,axis=0),label='Gibbs');plt.legend();plt.show()
+plt.plot(T, np.var(heats_or, axis=0), label='over-relaxation');plt.plot(T, np.var(heats_mom, axis=0), label='momentum');plt.plot(T, np.var(heats_Gibbs,axis=0),label='Gibbs');plt.legend();plt.show()
+
+
