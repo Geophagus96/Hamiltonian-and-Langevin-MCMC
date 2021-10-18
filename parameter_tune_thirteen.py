@@ -22,14 +22,18 @@ for k in range(9):
       config = initialstate(N)
       u = aux_initialize(N, paux[k])
       iT=1.0/T[tt]; iT2=iT*iT;
-    
+      Ene = calcEnergy(config)
+      Mag = calcMag(config)
       for i in range(eqSteps):         # equilibrate
-         thirteen_mom_cond(config, u, iT, paux[k], alphas[j])        # Monte Carlo moves
-
+         config, u, Ene, Mag = thirteen_mom_cond(config, u, iT, alphas[j], paux[k], Ene, Mag)        # Monte Carlo moves
+      Ene = calcEnergy(config)
+      Mag = calcMag(config)
+      E1 = E1 + Ene
+      M1 = M1 + Mag
+      M2 = M2 + Mag*Mag 
+      E2 = E2 + Ene*Ene
       for i in range(mcSteps):
-         thirteen_mom_cond(config, u, iT, paux[k], alphas[j])          
-         Ene = calcEnergy(config)     # calculate the energy
-         Mag = calcMag(config)        # calculate the magnetisation
+         config, u, Ene, Mag = thirteen_mom_cond(config, u, iT, alphas[j], paux[k], Ene, Mag)          
          E1 = E1 + Ene
          M1 = M1 + Mag
          M2 = M2 + Mag*Mag 
@@ -73,14 +77,18 @@ for j in range(9):
       E1 = M1 = E2 = M2 = 0
       config = initialstate(N)
       iT=1.0/T[tt]; iT2=iT*iT;
-    
+      Ene = calcEnergy(config)
+      Mag = calcMag(config)
       for i in range(eqSteps):         # equilibrate
-         thirteen_noprod_cond(config, iT, alphas[j])        # Monte Carlo moves
-
+         config, Ene, Mag = thirteen_noprod_cond(config, iT, alphas[j], Ene, Mag)        # Monte Carlo moves
+      Ene = calcEnergy(config)
+      Mag = calcMag(config)
+      E1 = E1 + Ene
+      M1 = M1 + float(Mag)
+      M2 = M2 + float(Mag*Mag) 
+      E2 = E2 + Ene*Ene
       for i in range(mcSteps):
-         thirteen_noprod_cond(config, iT, alphas[j])          
-         Ene = calcEnergy(config)     # calculate the energy
-         Mag = calcMag(config)        # calculate the magnetisation
+         config, Ene, Mag = thirteen_noprod_cond(config, iT, alphas[j], Ene, Mag)          
          E1 = E1 + Ene
          M1 = M1 + Mag
          M2 = M2 + Mag*Mag 
