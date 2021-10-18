@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Oct 15 11:55:59 2021
+
+@author: Yuze Zhou
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import trapz
@@ -30,13 +37,28 @@ def calcMag(config):
     mag = np.sum(config)
     return mag
 
-A = np.array([[0,1,1,0],[1,0,0,1],[1,0,0,1],[0,1,1,0]])
-xs = np.array([[0,0,0,0],[0,0,0,1],[0,0,1,0],[0,0,1,1],[0,1,0,0],[0,1,0,1],[0,1,1,0],[0,1,1,1],[1,0,0,0],[1,0,0,1],[1,0,1,0],[1,0,1,1],[1,1,0,0],[1,1,0,1],[1,1,1,0],[1,1,1,1]])
-xs[xs==0] = -1
-quad_ene = np.diag(np.dot(xs,A.dot(xs.T)))/2
+def inv_operand(x, y, p):
+    w = np.random.rand()
+    if (x==1):
+        if (y==0):
+            u = -1
+        else:
+            if (w < ((p/2)/(1-p/2))):
+                u = 1
+            else:
+                u = 0
+    if (x==(-1)):
+        if (y==1):
+            u = 1
+        else:
+            if (w < ((p/2)/(1-p/2))):
+                u = -1
+            else:
+                u = 0
+    return u
 
 #Thirteen dimensional with conditional independence neighbourhood with over-relaxation
-def thirteen_noprod_cond(config, beta, alpha):
+def thirteen_noprod_cond(config, beta, alpha, Ene, Mag):
     a = np.random.randint(0,N)
     b = np.random.randint(0,N)
     row_candidates = np.array([a,a,a,(a+1)%N,(a+1)%N,(a+2)%N,(a+2)%N,(a+2)%N,(a+3)%N,(a+3)%N,(a+4)%N,(a+4)%N,(a+4)%N])
@@ -53,13 +75,17 @@ def thirteen_noprod_cond(config, beta, alpha):
             u = (p+(1-p)*np.random.rand())
         u_new = (u+alpha*np.random.rand())%1
         if (u_new <= p):
-            config[a_cand, b_cand] = 1
+            S_new = 1
         else:
-            config[a_cand, b_cand] = -1
-    return config
+            S_new = -1
+        if (S!= S_new):
+            Ene += (S*cand_nb)
+            Mag += (2*S_new)
+        config[a_cand, b_cand] = S_new
+    return config, Ene, Mag
 
 #Thirteen dimensional with conditional independence neighbourhood with Gibbs sampling
-def thirteen_Gibbs(config, beta):
+def thirteen_Gibbs(config, beta, Ene, Mag):
     a = np.random.randint(0,N)
     b = np.random.randint(0,N)
     row_candidates = np.array([a,a,a,(a+1)%N,(a+1)%N,(a+2)%N,(a+2)%N,(a+2)%N,(a+3)%N,(a+3)%N,(a+4)%N,(a+4)%N,(a+4)%N])
@@ -71,14 +97,19 @@ def thirteen_Gibbs(config, beta):
         E_cand = beta*cand_nb
         p_cand = np.exp(-E_cand)/(np.exp(-E_cand)+np.exp(E_cand))
         w = np.random.rand()
+        x_cand = config[a_cand, b_cand]
         if (w<=p_cand):
-            config[a_cand, b_cand] = 1
+            S_new = 1
         else:
-            config[a_cand, b_cand] = -1
-    return config
+            S_new = -1
+        if (x_cand!= S_new):
+            Ene += (x_cand*cand_nb)
+            Mag += (2*S_new)
+        config[a_cand, b_cand] = S_new
+    return config, Ene, Mag
 
 #Thirteen dimensional neighbourhood with conditional independence stucture with momemtum and over-relaxation
-def thirteen_mom_cond(config, u, beta, alpha,p):
+def thirteen_mom_cond(config, u, beta, alpha, p, Ene, Mag):
     a = np.random.randint(0,N)
     b = np.random.randint(0,N)
     row_candidates = np.array([a,a,a,(a+1)%N,(a+1)%N,(a+2)%N,(a+2)%N,(a+2)%N,(a+3)%N,(a+3)%N,(a+4)%N,(a+4)%N,(a+4)%N])
@@ -104,11 +135,14 @@ def thirteen_mom_cond(config, u, beta, alpha,p):
             w = p1+(1-p1)*np.random.rand()
         w_new = (w+alpha*np.random.rand())%1
         if (w_new <= p1):
-            config[a_cand,b_cand] = 1
-            u[a_cand, b_cand] = inv_operand(1, y, p1)
+            S_new = 1
+            u[a_cand, b_cand] = inv_operand(1, y, p)
         else:
-            config[a_cand, b_cand] = (-1)
-            u[a_cand, b_cand] = inv_operand(-1, y, p1)
-    return config, u
+            S_new = (-1)
+            u[a_cand, b_cand] = inv_operand(-1, y, p)
+        if (x_cand!=S_new):
+             Ene += (x_cand*cand_nb)
+             Mag += (2*S_new)
+        config[a_cand, b_cand] = S_new
+    return config, u, Ene, Mag
 
- 
