@@ -1,5 +1,4 @@
 runfile('theoretical_val.py')
-runfile('four-dimensional.py')
 
 #Grid setup
 N = 20         #  size of the lattice, N x N
