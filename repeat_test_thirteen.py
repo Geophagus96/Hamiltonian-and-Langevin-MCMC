@@ -36,15 +36,15 @@ for j in range(100):
       for i in range(eqSteps):         # equilibrate
          config, Ene, Mag = thirteen_noprod_cond(config, iT, alpha, Ene, Mag )        # Monte Carlo moves
       E1 = E1 + Ene
-      M1 = M1 + Mag
-      M2 = M2 + Mag*Mag 
+      M1 = M1 + float(Mag)
+      M2 = M2 + float(Mag*Mag) 
       E2 = E2 + Ene*Ene
       for i in range(mcSteps):
          config ,Ene, Mag = thirteen_noprod_cond(config, iT, alpha, Ene, Mag)          
          E1 = E1 + Ene
-         M1 = M1 + Mag
-         M2 = M2 + Mag**2
-         E2 = E2 + Ene**2
+         M1 = M1 + float(Mag)
+         M2 = M2 + float(Mag*Mag)
+         E2 = E2 + Ene*Ene
 
       E[tt] = n1*E1
       M[tt] = n1*M1
@@ -124,17 +124,20 @@ for j in range(100):
       E1 = M1 = E2 = M2 = 0
       config = initialstate(N)
       iT=1.0/T[tt]; iT2=iT*iT;
-    
+      Ene = calcEnergy(config)
+      Mag = calcMag(config)
       for i in range(eqSteps):         # equilibrate
-         thirteen_Gibbs(config, iT)        # Monte Carlo moves
+         config, Ene, Mag = thirteen_Gibbs(config, iT, Ene, Mag)        # Monte Carlo moves
+      E1 = E1 + Ene
+      M1 = M1 + float(Mag)
+      M2 = M2 + float(Mag*Mag) 
+      E2 = E2 + Ene*Ene
 
       for i in range(mcSteps):
-         thirteen_Gibbs(config, iT)          
-         Ene = calcEnergy(config)     # calculate the energy
-         Mag = calcMag(config)        # calculate the magnetisation
+         config, Ene, Mag = thirteen_Gibbs(config, iT, Ene, Mag)          
          E1 = E1 + Ene
-         M1 = M1 + Mag
-         M2 = M2 + Mag*Mag 
+         M1 = M1 + float(Mag)
+         M2 = M2 + float(Mag*Mag) 
          E2 = E2 + Ene*Ene
 
       E[tt] = n1*E1
