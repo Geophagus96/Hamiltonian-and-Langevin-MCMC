@@ -118,8 +118,8 @@ def thirteen_mom_cond(config, u, beta, alpha, p, Ene, Mag):
         a_cand = row_candidates[i]
         b_cand = col_candidates[i]
         cand_nb = config[(a_cand+1)%N, b_cand] + config[a_cand,(b_cand+1)%N] + config[(a_cand-1)%N, b_cand] + config[a_cand,(b_cand-1)%N]
-        x_cand = config[a,b]
-        u_cand = u[a,b]
+        x_cand = config[a_cand,b_cand]
+        u_cand = u[a_cand,b_cand]
         y = 0.5*x_cand+x_cand+u_cand
         y = y-(y>1)+(y<0)
         y = 2*y-1     
@@ -145,4 +145,5 @@ def thirteen_mom_cond(config, u, beta, alpha, p, Ene, Mag):
              Mag += (2*S_new)
         config[a_cand, b_cand] = S_new
     return config, u, Ene, Mag
+
 
