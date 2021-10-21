@@ -24,16 +24,14 @@ for k in range(9):
       iT=1.0/T[tt]; iT2=iT*iT;
       Ene = calcEnergy(config)
       Mag = calcMag(config)
-      for i in range(eqSteps):         # equilibrate
-         config, u, Ene, Mag = thirteen_mom_cond(config, u, iT, alphas[j], paux[k], Ene, Mag)        # Monte Carlo moves
-      Ene = calcEnergy(config)
-      Mag = calcMag(config)
+      for i in range(eqSteps):         
+         config, u, Ene, Mag = thirteen_mom_cond(config, u, iT, alphas[j], paux[k], Ene, Mag)        # Equilibrate
       E1 = E1 + Ene
       M1 = M1 + Mag
       M2 = M2 + Mag*Mag 
       E2 = E2 + Ene*Ene
       for i in range(mcSteps):
-         config, u, Ene, Mag = thirteen_mom_cond(config, u, iT, alphas[j], paux[k], Ene, Mag)          
+         config, u, Ene, Mag = thirteen_mom_cond(config, u, iT, alphas[j], paux[k], Ene, Mag)          #MCmoves
          E1 = E1 + Ene
          M1 = M1 + Mag
          M2 = M2 + Mag*Mag 
