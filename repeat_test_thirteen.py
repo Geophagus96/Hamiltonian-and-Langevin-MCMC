@@ -35,8 +35,6 @@ for j in range(100):
       Mag = calcMag(config)
       for i in range(eqSteps):         # equilibrate
          config, Ene, Mag = thirteen_noprod_cond(config, iT, alpha, Ene, Mag )        # Monte Carlo moves
-      Ene = calcEnergy(config)
-      Mag = calcMag(config)
       E1 = E1 + Ene
       M1 = M1 + Mag
       M2 = M2 + Mag*Mag 
@@ -85,8 +83,6 @@ for j in range(100):
       Mag = calcMag(config)
       for i in range(eqSteps):         # equilibrate
          config, u, Ene, Mag = thirteen_mom_cond(config, u, iT, alpha, p1, Ene, Mag)        # Monte Carlo moves
-      Ene = calcEnergy(config)
-      Mag = calcMag(config)
       E1 = E1 + Ene
       M1 = M1 + float(Mag)
       M2 = M2 + float(Mag*Mag) 
