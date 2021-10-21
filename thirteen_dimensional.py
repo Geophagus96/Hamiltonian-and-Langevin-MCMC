@@ -7,7 +7,6 @@ Created on Fri Oct 15 11:55:59 2021
 
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy import trapz
 import scipy.stats as st
 from math import sqrt
 import time
