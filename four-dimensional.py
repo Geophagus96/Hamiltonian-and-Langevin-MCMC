@@ -114,6 +114,93 @@ xs = np.array([[0,0,0,0],[0,0,0,1],[0,0,1,0],[0,0,1,1],[0,1,0,0],[0,1,0,1],[0,1,
 xs[xs==0] = -1
 quad_ene = np.diag(np.dot(xs,A.dot(xs.T)))/2
 
+#Four-dimensional over-relaxation with block neighbourhood of size 4 with momentum grid and product approximation of probability (optimal alpha)
+def four_dim_prod_mom(config, u, beta, p, Mag, Ene):
+    a = np.random.randint(0,N)
+    b = np.random.randint(0,N)
+    x1 = config[a,b]
+    x2 = config[a,(b+1)%N]
+    x3 = config[(a+1)%N,b]
+    x4 = config[(a+1)%N,(b+1)%N]
+    nb1 = config[(a-1)%N,b] + config[a, (b-1)%N]
+    nb2 = config[(a-1)%N,(b+1)%N] + config[a,(b+2)%N]
+    nb3 = config[(a+1)%N,(b-1)%N] + config[(a+2)%N,b]
+    nb4 = config[(a+1)%N,(b+2)%N] + config[(a+2)%N,(b+1)%N]
+    nbs = np.array([nb1,nb2,nb3,nb4])
+    u0 = -np.array([u[a,b],u[a,(b+1)%N],u[(a+1)%N,b],u[(a+1)%N,(b+1)%N]])
+    x = np.array([x1,x2,x3,x4])
+    y = (x+1)//2+u0
+    y[y>0] = 1
+    y[y<=0] = 0
+    ys =  np.repeat(np.array([y]), 16, axis=0)
+    logpxy = np.sum(np.log((1-p/2)*[xs==ys][0]+(p/2)*[xs!=ys][0]),axis=1)
+    ps = np.exp(-beta*(np.dot(xs,nbs)+quad_ene)+logpxy)
+    pssum = np.sum(ps)
+    p11 = np.sum(ps[np.array([8,9,10,11,12,13,14,15])])/pssum
+    p21 = np.sum(ps[np.array([4,5,6,7,12,13,14,15])])/pssum
+    p31 = np.sum(ps[np.array([2,3,6,7,10,11,14,15])])/pssum
+    p41 = np.sum(ps[np.array([1,3,5,7,9,11,13,15])])/pssum
+    p1s = np.array([p11,p21,p31,p41])
+    xnew = np.zeros(4)
+    unew = np.zeros(4)
+    log_reject_ratio = 0
+    alphas = np.zeros(4)
+    for i in range(4):
+        alphas[i] = np.sqrt(p1s[i]**2+(1-p1s[i])**2)
+        if (x[i]==1):
+            w0 = p1s[i]*np.random.rand()
+        else:
+            w0 = p1s[i]+(1-p1s[i])*np.random.rand()
+        w = (w0+alphas[i]*np.random.rand())%1
+        if (w <= p1s[i]):
+            xnew[i] = 1
+        else:
+            xnew[i] = (-1)
+        unew[i] = inv_operand(xnew[i],y[i],p)
+    for i in range(4):
+        if (x[i]==1):
+            if (xnew[i]==1):
+                log_reject_ratio += np.log(Qb11(p1s[i], alphas[i])/Q11(p1s[i],alphas[i]))
+            else:
+                log_reject_ratio += np.log(Qb01(p1s[i], alphas[i])/(1-Q11(p1s[i],alphas[i])))
+        else:
+            if (xnew[i]==1):
+                log_reject_ratio += np.log((1-Qb11(p1s[i], alphas[i]))/Q01(p1s[i],alphas[i]))
+            else:
+                log_reject_ratio += np.log((1-Qb01(p1s[i], alphas[i]))/(1-Q01(p1s[i],alphas[i])))
+    Ex = -beta*(np.dot(x,nbs)+np.dot(x,np.dot(A,x))/2)
+    Exnew = -beta*(np.dot(xnew,nbs)+np.dot(xnew,np.dot(A,xnew))/2)
+    log_reject_ratio += (Exnew-Ex)
+    for i in range(4):
+        if (y[i]==0):
+            if (x == (-1)):
+                if (u0==(-1)):
+                    log_reject_ratio -= np.log((p/2)/(1-p/2)) 
+                else:
+                    log_reject_ratio -= np.log((1-p)/(1-p/2))
+            if (xnew == (-1)):
+                if (unew ==(-1)):
+                    log_reject_ratio += np.log((p/2)/(1-p/2))
+                else:
+                    log_reject_ratio += np.log((1-p)/(1-p/2))
+        else:
+            if (x == 1):
+                if (u0 == 1):
+                    log_reject_ratio -= np.log((p/2)/(1-p/2))
+                else:
+                    log_reject_ratio -= np.log((1-p)/(1-p/2))
+            if (xnew == 1):
+                if (unew == 1):
+                    log_reject_ratio += np.log((p/2)/(1-p/2))
+                else:
+                    log_reject_ratio += np.log((1-p)/(1-p))
+    if (np.random.rand()<min(1.0, np.exp(log_reject_ratio))):
+         config[a,b], config[a,(b+1)%N], config[(a+1)%N,b], config[(a+1)%N,(b+1)%N] = xnew[0], xnew[1], xnew[2], xnew[3]
+         u[a,b], u[a,(b+1)%N], u[(a+1)%N,b], u[(a+1)%N,(b+1)%N] = unew[0], unew[2], unew[2], unew[3]
+    else:
+         u[a,b], u[a,(b+1)%N], u[(a+1)%N,b], u[(a+1)%N,(b+1)%N] = -u0[0], -u0[1], -u0[2], -u0[3]
+    return config, u
+        
 #Four-dimensional over-relaxation with block neighbourhood with the momentum grid and without product approximation of probability
 def four_dim_noprod_mom(config, u, beta, p, alpha):
     a = np.random.randint(0,N)
@@ -455,7 +542,60 @@ def four_dim_noprod(config, beta, alpha):
     config[(a+1)%N,(b+1)%N] = x4new
     return config
 
-
+#Four-dimensional over-relaxation with product approximation (optimal alpha)
+def four_dim_prod(config, beta):
+    a = np.random.randint(0,N)
+    b = np.random.randint(0,N)
+    x1 = config[a,b]
+    x2 = config[a,(b+1)%N]
+    x3 = config[(a+1)%N,b]
+    x4 = config[(a+1)%N,(b+1)%N]
+    x = np.array([x1,x2,x3,x4])
+    nb1 = config[(a-1)%N,b] + config[a, (b-1)%N]
+    nb2 = config[(a-1)%N,(b+1)%N] + config[a,(b+2)%N]
+    nb3 = config[(a+1)%N,(b-1)%N] + config[(a+2)%N,b]
+    nb4 = config[(a+1)%N,(b+2)%N] + config[(a+2)%N,(b+1)%N]
+    nbs = np.array([nb1,nb2,nb3,nb4])
+    ps = np.exp(-beta*(np.dot(x,nbs)+quad_ene))
+    pssum = np.sum(ps)
+    p11 = np.sum(ps[np.array([8,9,10,11,12,13,14,15])])/pssum
+    p21 = np.sum(ps[np.array([4,5,6,7,12,13,14,15])])/pssum
+    p31 = np.sum(ps[np.array([2,3,6,7,10,11,14,15])])/pssum
+    p41 = np.sum(ps[np.array([1,3,5,7,9,11,13,15])])/pssum
+    p1s = np.array([p11,p21,p31,p41])
+    xnew = np.zeros(4)
+    ratio = 1 
+    alphas = np.zeros(4)
+    for i in range(4):
+        if (x[i]==1):
+            w0 = p1s[i]*np.random.rand()
+        else:
+            w0 = p1s[i]+(1-p1s[i])*np.random.rand()
+        alphas[i] = np.sqrt(p1s[i]**2+(1-p1s[i])**2)
+        w = (w0+alphas[i]*np.random.rand())%1
+        if (w <= p1s[i]):
+            xnew[i] = 1
+        else:
+            xnew[i] = (-1)
+    for i in range(4):
+        if (x[i]==1):
+            if (xnew[i]==1):
+                ratio *= (Qb11(p1s[i], alphas[i])/Q11(p1s[i],alphas[i]))
+            else:
+                ratio *= (Qb01(p1s[i], alphas[i])/(1-Q11(p1s[i],alphas[i])))
+        else:
+            if (xnew[i]==1):
+                ratio *= ((1-Qb11(p1s[i], alphas[i]))/Q01(p1s[i],alphas[i]))
+            else:
+                ratio *= ((1-Qb01(p1s[i], alphas[i]))/(1-Q01(p1s[i],alphas[i])))
+    Ex = -beta*(np.dot(x,nbs)+np.dot(x,np.dot(A,x))/2)
+    Exnew = -beta*(np.dot(xnew,nbs)+np.dot(xnew,np.dot(A,xnew))/2)
+    ratio *= np.exp(Exnew-Ex)
+    w = np.random.rand()
+    if (w<=ratio):
+        config[a,b], config[a,(b+1)%N], config[(a+1)%N,b], config[(a+1)%N,(b+1)%N] = xnew[0], xnew[1], xnew[2], xnew[3]
+    return config
+        
 #Four-dimensional with block neighbourhood with discrete MALA
 def dmala(config, beta):
     a = np.random.randint(0,N)
