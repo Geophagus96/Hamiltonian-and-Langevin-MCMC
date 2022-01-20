@@ -198,7 +198,7 @@ def four_dim_prod_mom(config, u, beta, p, Mag, Ene):
          config[a,b], config[a,(b+1)%N], config[(a+1)%N,b], config[(a+1)%N,(b+1)%N] = xnew[0], xnew[1], xnew[2], xnew[3]
          u[a,b], u[a,(b+1)%N], u[(a+1)%N,b], u[(a+1)%N,(b+1)%N] = unew[0], unew[2], unew[2], unew[3]
     else:
-         u[a,b], u[a,(b+1)%N], u[(a+1)%N,b], u[(a+1)%N,(b+1)%N] = -u0[0], -u0[1], -u0[2], -u0[3]
+         u[a,b], u[a,(b+1)%N], u[(a+1)%N,b], u[(a+1)%N,(b+1)%N] = u0[0], u0[1], u0[2], u0[3]
     return config, u
         
 #Four-dimensional over-relaxation with block neighbourhood with the momentum grid and without product approximation of probability
