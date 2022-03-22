@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+ # -*- coding: utf-8 -*-
 """
 Created on Wed Sep 29 23:18:46 2021
 
@@ -12,6 +12,7 @@ from math import sinh, cosh, log, sin, pi
 import matplotlib.pyplot as plt
 
 def lnlambda(beta):
+    #beta = -beta
     K = (2*sinh(-2*beta))/((cosh(-2*beta))**2)
     def integrand(w):
         return log(0.5*(1+(1-(K*sin(w))**2)**(0.5)))
