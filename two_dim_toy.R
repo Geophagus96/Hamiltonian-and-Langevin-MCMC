@@ -4,6 +4,7 @@
 #(x1=1 x2=0) into n=2 and (x1=0 x2=0) into n=0
 #The acceptance probability is caculated using the marginal distributions
 
+require(binaryLogic)
 ##The first function is with the proposal probability q1=p(x=1|y=1) and q0=p(x=0|y=0)
 mc1_list = function(u, beta, k, p, n){
   u0 = u
