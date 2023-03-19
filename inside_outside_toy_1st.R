@@ -68,7 +68,7 @@ insideHAMS = function(delta, eps, n){
   #acc: the array of acceptance or rejection
 }
 
-#inside HAMS is the function of inside HAMS, delta, eps, sigma corresponds to the three parameters, n is the number of samples
+#outside HAMS is the function of inside HAMS, delta, eps, sigma corresponds to the three parameters, n is the number of samples
 #Negation is incorporated, but over-relaxation is not
 outsideHAMS = function(delta, eps, n){
   s1s = vector(length = n)
@@ -120,9 +120,10 @@ outsideHAMS = function(delta, eps, n){
   #s1s, s2s, u1s, u2s, accs correspond to the same variable as the inside HAMS
 }
 
-delta = 1.4
-eps = 0.9
-n = 200000
+delta = 0.9
+eps = 0.95
+sigma = 1.1
+n = 10000
 insideresults = insideHAMS(delta, eps, n)
 
 cat('Results corresponding to the inside-HAMS algorithm:')
